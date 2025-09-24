@@ -10,11 +10,18 @@ namespace OPP_lab1_oleksiuk_C_
         public Form1()
         {
             InitializeComponent();
-            textBoxArticle.MaxLength = 8;
-            textBoxArticle.KeyPress += OnlyDigits_KeyPress;
-            textBoxPrice.KeyPress += Price_KeyPress;
-            textBoxYear.KeyPress += OnlyDigits_KeyPress;
+            textBox1.MaxLength = 8;
+            textBox1.KeyPress += Article_KeyPress;
+            textBox3.KeyPress += Brand_KeyPress;
+            textBox4.MaxLength = 10;
+            textBox4.KeyPress += Price_KeyPress;
+            textBox5.KeyPress += Year_KeyPress;
             tabControl1.SelectedIndexChanged += TabControl1_SelectedIndexChanged;
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+
         }
 
         class Product
@@ -24,9 +31,7 @@ namespace OPP_lab1_oleksiuk_C_
             public string Brand { get; set; }
             public double Price { get; set; }
             public int Year { get; set; }
-
             public Product() { }
-
             public Product(string article, string name, string brand, double price, int year)
             {
                 Article = article;
@@ -35,24 +40,39 @@ namespace OPP_lab1_oleksiuk_C_
                 Price = price;
                 Year = year;
             }
-
             public string Info() =>
-                $"Артикул: {Article}, Назва: {Name}, Бренд: {Brand}, Ціна: {Price} грн, Рік: {Year}";
+                 $"Артикул: {Article}, Назва: {Name}, Бренд: {Brand}, Ціна: {Price} грн, Рік: {Year}";
         }
 
-        private void OnlyDigits_KeyPress(object sender, KeyPressEventArgs e)
+        private void Article_KeyPress(object sender, KeyPressEventArgs e)
         {
+            TextBox tb = sender as TextBox;
             if (!char.IsControl(e.KeyChar) && !char.IsDigit(e.KeyChar))
+                e.Handled = true;
+            if (!char.IsControl(e.KeyChar) && tb.Text.Length >= 8)
+                e.Handled = true;
+        }
+
+        private void Brand_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (!char.IsControl(e.KeyChar) && !char.IsLetter(e.KeyChar) && e.KeyChar != ' ')
                 e.Handled = true;
         }
 
         private void Price_KeyPress(object sender, KeyPressEventArgs e)
         {
+            TextBox tb = sender as TextBox;
             if (!char.IsControl(e.KeyChar) && !char.IsDigit(e.KeyChar) && e.KeyChar != '.' && e.KeyChar != ',')
                 e.Handled = true;
+            if ((e.KeyChar == '.' || e.KeyChar == ',') && (tb.Text.Contains(".") || tb.Text.Contains(",")))
+                e.Handled = true;
+            if (!char.IsControl(e.KeyChar) && tb.Text.Length >= 10)
+                e.Handled = true;
+        }
 
-            if ((e.KeyChar == '.' || e.KeyChar == ',') &&
-                ((sender as TextBox).Text.Contains(".") || (sender as TextBox).Text.Contains(",")))
+        private void Year_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (!char.IsControl(e.KeyChar) && !char.IsDigit(e.KeyChar))
                 e.Handled = true;
         }
 
@@ -60,27 +80,27 @@ namespace OPP_lab1_oleksiuk_C_
         {
             if (tabControl1.SelectedTab.Text == "Видалення")
             {
-                textBoxBrand.Enabled = false;
-                textBoxPrice.Enabled = false;
-                textBoxYear.Enabled = false;
+                textBox3.Enabled = false;
+                textBox4.Enabled = false;
+                textBox5.Enabled = false;
             }
             else
             {
-                textBoxBrand.Enabled = true;
-                textBoxPrice.Enabled = true;
-                textBoxYear.Enabled = true;
+                textBox3.Enabled = true;
+                textBox4.Enabled = true;
+                textBox5.Enabled = true;
             }
         }
 
-        private void buttonOk_Click(object sender, EventArgs e)
+        private void button1_Click(object sender, EventArgs e)
         {
-            string article = textBoxArticle.Text.Trim();
-            string name = textBoxName.Text.Trim();
-            string brand = textBoxBrand.Text.Trim();
-            string priceStr = textBoxPrice.Text.Trim().Replace(',', '.');
-            string yearStr = textBoxYear.Text.Trim();
+            string article = textBox1.Text.Trim();
+            string name = textBox2.Text.Trim();
+            string brand = textBox3.Text.Trim();
+            string priceStr = textBox4.Text.Trim().Replace(',', '.');
+            string yearStr = textBox5.Text.Trim();
 
-            if (tabControl1.SelectedTab.Text == "Додавання")
+            if (tabControl1.SelectedTab.Text == "додавання")
             {
                 if (string.IsNullOrWhiteSpace(article) ||
                     string.IsNullOrWhiteSpace(name) ||
@@ -103,18 +123,17 @@ namespace OPP_lab1_oleksiuk_C_
                 }
 
                 Product p = new Product(article, name, brand, price, year);
-                dataGridViewMain.Rows.Add(p.Article, p.Name, p.Brand, p.Price, p.Year);
+                dataGridView1.Rows.Add(p.Article, p.Name, p.Brand, p.Price, p.Year);
             }
             else if (tabControl1.SelectedTab.Text == "Видалення")
             {
                 bool deleted = false;
-
-                foreach (DataGridViewRow row in dataGridViewMain.Rows)
+                foreach (DataGridViewRow row in dataGridView1.Rows)
                 {
                     if (!row.IsNewRow &&
                         (row.Cells[0].Value?.ToString() == article || row.Cells[1].Value?.ToString() == name))
                     {
-                        dataGridViewMain.Rows.Remove(row);
+                        dataGridView1.Rows.Remove(row);
                         deleted = true;
                         break;
                     }
@@ -122,28 +141,27 @@ namespace OPP_lab1_oleksiuk_C_
 
                 if (deleted)
                 {
-                    foreach (DataGridViewRow row in dataGridViewSearch.Rows)
+                    foreach (DataGridViewRow row in dataGridView2.Rows)
                     {
                         if (!row.IsNewRow &&
                             (row.Cells[0].Value?.ToString() == article || row.Cells[1].Value?.ToString() == name))
                         {
-                            dataGridViewSearch.Rows.Remove(row);
+                            dataGridView2.Rows.Remove(row);
                             break;
                         }
                     }
                 }
                 else
                 {
-                    MessageBox.Show("Такого товару немає у списку!", "Помилка",
-                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    MessageBox.Show("Такого товару немає у списку!", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
             }
             else if (tabControl1.SelectedTab.Text == "Пошук")
             {
-                dataGridViewSearch.Rows.Clear();
+                dataGridView2.Rows.Clear();
                 bool found = false;
 
-                foreach (DataGridViewRow row in dataGridViewMain.Rows)
+                foreach (DataGridViewRow row in dataGridView1.Rows)
                 {
                     if (row.IsNewRow) continue;
 
@@ -161,7 +179,7 @@ namespace OPP_lab1_oleksiuk_C_
 
                     if (match)
                     {
-                        dataGridViewSearch.Rows.Add(
+                        dataGridView2.Rows.Add(
                             row.Cells[0].Value,
                             row.Cells[1].Value,
                             row.Cells[2].Value,
@@ -174,26 +192,25 @@ namespace OPP_lab1_oleksiuk_C_
 
                 if (!found)
                 {
-                    MessageBox.Show("За даним запитом нічого не знайдено!", "Результат пошуку",
-                        MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show("За даним запитом нічого не знайдено!", "Результат пошуку", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
             }
 
-            textBoxArticle.Clear();
-            textBoxName.Clear();
-            textBoxBrand.Clear();
-            textBoxPrice.Clear();
-            textBoxYear.Clear();
+            textBox1.Clear();
+            textBox2.Clear();
+            textBox3.Clear();
+            textBox4.Clear();
+            textBox5.Clear();
         }
 
-        private void saveToolStripMenuItem_Click(object sender, EventArgs e)
+        private void зберегтиToolStripMenuItem_Click(object sender, EventArgs e)
         {
             SaveFileDialog sfd = new SaveFileDialog { Filter = "Text Files|*.txt|All Files|*.*" };
             if (sfd.ShowDialog() == DialogResult.OK)
             {
                 using (StreamWriter sw = new StreamWriter(sfd.FileName))
                 {
-                    foreach (DataGridViewRow row in dataGridViewMain.Rows)
+                    foreach (DataGridViewRow row in dataGridView1.Rows)
                     {
                         if (!row.IsNewRow)
                         {
@@ -204,19 +221,19 @@ namespace OPP_lab1_oleksiuk_C_
             }
         }
 
-        private void openToolStripMenuItem_Click(object sender, EventArgs e)
+        private void відкритиToolStripMenuItem_Click(object sender, EventArgs e)
         {
             OpenFileDialog ofd = new OpenFileDialog { Filter = "Text Files|*.txt|All Files|*.*" };
             if (ofd.ShowDialog() == DialogResult.OK)
             {
-                dataGridViewMain.Rows.Clear();
+                dataGridView1.Rows.Clear();
                 string[] lines = File.ReadAllLines(ofd.FileName);
                 foreach (string line in lines)
                 {
                     string[] parts = line.Split(';');
                     if (parts.Length == 5)
                     {
-                        dataGridViewMain.Rows.Add(parts[0], parts[1], parts[2], parts[3], parts[4]);
+                        dataGridView1.Rows.Add(parts[0], parts[1], parts[2], parts[3], parts[4]);
                     }
                 }
             }

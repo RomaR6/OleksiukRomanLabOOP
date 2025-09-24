@@ -1,4 +1,12 @@
-﻿#include "Exam.h"
+﻿/* ЛР.ОК19.ПІ231.01.06
+* 6.ІСПИТ
+ім'я студента-string
+дата - int
+оцінка- int
+
+*/
+
+#include "Exam.h"
 #include <iostream>
 using namespace std;
 
