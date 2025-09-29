@@ -1,27 +1,28 @@
-﻿/* ЛР.ОК19.ПІ231.01.06
-* 6.ІСПИТ
-ім'я студента-string
-дата - int
-оцінка- int
-
-*/
-
-#include "Exam.h"
+﻿#include "Exam.h"
 #include <iostream>
 using namespace std;
 
-Exam::Exam() : name(""), date(0), grade(0)
+Exam::Exam()
 {
+    setName("");
+    setDate(1);
+    setGrade(1);
     cout << "Default constructor called " << this << endl;
 }
 
-Exam::Exam(std::string n, int d, int g) : name(n), date(d), grade(g)
+Exam::Exam(std::string n, int d, int g)
 {
+    setName(n);
+    setDate(d);
+    setGrade(g);
     cout << "Parameterized constructor called " << this << endl;
 }
 
-Exam::Exam(const Exam& other) : name(other.name), date(other.date), grade(other.grade)
+Exam::Exam(const Exam& other)
 {
+    setName(other.name);
+    setDate(other.date);
+    setGrade(other.grade);
     cout << "Copy constructor called " << this << endl;
 }
 
@@ -47,17 +48,26 @@ int Exam::getGrade()
 
 void Exam::setName(std::string n)
 {
-    name = n;
+    if (!n.empty())
+        name = n;
+    else
+        name = "Unknown";
 }
 
 void Exam::setDate(int d)
 {
-    date = d;
+    if (d >= 1 && d <= 30)
+        date = d;
+    else
+        date = 1;
 }
 
 void Exam::setGrade(int g)
 {
-    grade = g;
+    if (g >= 1 && g <= 5)
+        grade = g;
+    else
+        grade = 1;
 }
 
 void Exam::printExam()
@@ -69,7 +79,7 @@ void Exam::printExam()
 
 void Exam::setExam(std::string n, int d, int g)
 {
-    name = n;
-    date = d;
-    grade = g;
+    setName(n);
+    setDate(d);
+    setGrade(g);
 }

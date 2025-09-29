@@ -1,27 +1,29 @@
-﻿/* ЛР.ОК19.ПІ231.01.06
-* 6.ІСПИТ
-ім'я студента-string
-дата - int
-оцінка- int
-
-*/
-
-#include <iostream>
+﻿#include <iostream>
 #include "Exam.h"
 using namespace std;
-void print(Exam ex)
+
+void print(Exam* ex)
 {
-	cout << "print function called\n";
-	ex.printExam();
+    cout << "print function called\n";
+    ex->printExam();
 }
+
 int main()
 {
-	Exam ex("oleksiuk", 20, 5);	
-	Exam ex1("ivanov", 21, 4);
-	ex.printExam();
-	ex1.printExam();
-	return 0;
+    Exam* ex = new Exam("oleksiuk", 20, -5);  
+    Exam* ex1 = new Exam("", 50, 4);          
+    Exam* ex2 = new Exam("ivanov", 21, 4);
 
+    ex->printExam();
+    ex1->printExam();
+    ex2->printExam();
+
+    cout << "-------------------\n";
+    print(ex2);
+
+    delete ex;
+    delete ex1;
+    delete ex2;
+
+    return 0;
 }
-
-
