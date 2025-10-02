@@ -1,6 +1,5 @@
 #pragma once
 #include <iostream>
-#include <string>
 using namespace std;
 
 class IntMatrix
@@ -22,15 +21,13 @@ public:
     void setMainDiagonal(int value);
 
     
-    IntMatrix& operator++();   
-    IntMatrix operator++(int); 
-    IntMatrix& operator--();   
-    IntMatrix operator--(int); 
-
-    operator bool() const; 
-
     IntMatrix operator+(const IntMatrix& other) const;
+    IntMatrix operator-(const IntMatrix& other) const;
+    IntMatrix& operator++();     
+    IntMatrix operator++(int);   
+    IntMatrix& operator--();     
+    IntMatrix operator--(int);   
+    bool operator==(const IntMatrix& other) const;
 
-    operator string() const;                
-    static IntMatrix fromString(const string& str); 
+    friend ostream& operator<<(ostream& os, const IntMatrix& m);
 };

@@ -19,6 +19,8 @@ int main()
     ex2->printExam();
 
     cout << "-------------------\n";
+	print(ex);
+	print(ex1);
     print(ex2);
 
     delete ex;
