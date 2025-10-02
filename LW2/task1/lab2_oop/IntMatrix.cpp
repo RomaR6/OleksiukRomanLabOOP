@@ -89,7 +89,6 @@ void IntMatrix::setMainDiagonal(int value)
         IntArray[i][i] = value;
 }
 
-// ---------- Перевантаження операторів ----------
 IntMatrix IntMatrix::operator+(const IntMatrix& other) const
 {
     if (n != other.n) throw invalid_argument("Matrix sizes must match");
