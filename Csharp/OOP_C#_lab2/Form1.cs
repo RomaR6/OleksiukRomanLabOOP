@@ -45,7 +45,7 @@ namespace OOP_C__lab2
                 Price = price;
                 Year = year;
             }
-
+            
             public static Product operator +(Product p, double value)
             {
                 return new Product(p.Article, p.Name, p.Brand, p.Price + value, p.Year);
