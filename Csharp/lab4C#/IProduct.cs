@@ -4,6 +4,5 @@
     {
         string GetFullInfo();
         string GetSpecificInfo();
-        string ToCsvString();
     }
 }

@@ -1,13 +1,19 @@
-﻿using static System.Net.Mime.MediaTypeNames;
+﻿using System.Drawing;
 using System.Windows.Forms;
-using System.Xml.Linq;
 
 namespace lab4C_
 {
     partial class Form1
     {
+        /// <summary>
+        /// Required designer variable.
+        /// </summary>
         private System.ComponentModel.IContainer components = null;
 
+        /// <summary>
+        /// Clean up any resources being used.
+        /// </summary>
+        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
             if (disposing && (components != null))
@@ -19,6 +25,10 @@ namespace lab4C_
 
         #region Windows Form Designer generated code
 
+        /// <summary>
+        /// Required method for Designer support - do not modify
+        /// the contents of this method with the code editor.
+        /// </summary>
         private void InitializeComponent()
         {
             menuStrip1 = new MenuStrip();
@@ -97,18 +107,22 @@ namespace lab4C_
             // 
             // файлToolStripMenuItem
             // 
+            файлToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { відкритиToolStripMenuItem, зберегтиToolStripMenuItem });
             файлToolStripMenuItem.Name = "файлToolStripMenuItem";
-            файлToolStripMenuItem.Size = new Size(14, 20);
+            файлToolStripMenuItem.Size = new Size(59, 20);
+            файлToolStripMenuItem.Text = "Файл";
             // 
             // відкритиToolStripMenuItem
             // 
             відкритиToolStripMenuItem.Name = "відкритиToolStripMenuItem";
-            відкритиToolStripMenuItem.Size = new Size(32, 19);
+            відкритиToolStripMenuItem.Size = new Size(139, 22);
+            відкритиToolStripMenuItem.Text = "Відкрити";
             // 
             // зберегтиToolStripMenuItem
             // 
             зберегтиToolStripMenuItem.Name = "зберегтиToolStripMenuItem";
-            зберегтиToolStripMenuItem.Size = new Size(32, 19);
+            зберегтиToolStripMenuItem.Size = new Size(139, 22);
+            зберегтиToolStripMenuItem.Text = "Зберегти";
             // 
             // tabControl1
             // 
@@ -580,7 +594,6 @@ namespace lab4C_
             MainMenuStrip = menuStrip1;
             Name = "Form1";
             Text = "Магазин сантехніки";
-            Load += Form1_Load;
             menuStrip1.ResumeLayout(false);
             menuStrip1.PerformLayout();
             tabControl1.ResumeLayout(false);

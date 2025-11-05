@@ -3,27 +3,18 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Reflection.Emit;
 using System.Windows.Forms;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace lab4C_
 {
     public partial class Form1 : Form
     {
-        private readonly ProductService _productService;
+        private List<Product> productList = new List<Product>();
 
         public Form1()
         {
             InitializeComponent();
-            _productService = new ProductService();
-            _productService.ProductListChanged += OnProductListChanged;
             SetupEventHandlers();
-        }
-
-        private void OnProductListChanged()
-        {
-            UpdateDataGridView(_productService.GetAllProducts());
         }
 
         private void SetupEventHandlers()
@@ -40,8 +31,6 @@ namespace lab4C_
             textBox3.KeyPress += Brand_KeyPress;
             textBox4.KeyPress += Price_KeyPress;
             textBox5.KeyPress += Year_KeyPress;
-            textBoxVolume.KeyPress += Year_KeyPress;
-            textBoxPower.KeyPress += Year_KeyPress;
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -50,19 +39,12 @@ namespace lab4C_
             comboBoxType.Items.AddRange(new string[] { "Бойлер", "Сифон", "Мийка" });
             comboBoxType.SelectedIndex = 0;
             TabControl1_SelectedIndexChanged(null, null);
-            OnProductListChanged();
         }
 
         private void TabControl1_SelectedIndexChanged(object sender, EventArgs e)
         {
             string selectedTab = tabControl1.SelectedTab.Text;
             bool isCalculationTab = selectedTab == "обрахувати";
-
-            if (selectedTab == "Пошук")
-            {
-                ClearInputFields();
-                UpdateDataGridView(new List<Product>(), isSearchResult: true);
-            }
 
             ShowHideMainControls(!isCalculationTab);
             ShowHideArithmetic(isCalculationTab);
@@ -79,64 +61,48 @@ namespace lab4C_
         private void button1_Click(object sender, EventArgs e)
         {
             string selectedTab = tabControl1.SelectedTab.Text;
-            try
-            {
-                if (selectedTab == "додавання") AddProduct();
-                else if (selectedTab == "Видалення") DeleteProduct();
-                else if (selectedTab == "Пошук") SearchProducts();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message, "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
 
-            if (selectedTab != "Пошук")
-            {
-                ClearInputFields();
-            }
+            if (selectedTab == "додавання") AddProduct();
+            else if (selectedTab == "Видалення") DeleteProduct();
+            else if (selectedTab == "Пошук") SearchProducts();
+
+            ClearInputFields();
         }
 
         private void AddProduct()
         {
+            if (!double.TryParse(textBox4.Text.Trim().Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out double price) ||
+                !int.TryParse(textBox5.Text.Trim(), out int year))
+            {
+                MessageBox.Show("Заповніть коректно ціну та рік!", "Помилка валідації", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
             Product newProduct = null;
             try
             {
-                if (!double.TryParse(textBox4.Text.Trim().Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out double price))
-                    throw new ArgumentException("Некоректна ціна.");
-                if (!int.TryParse(textBox5.Text.Trim(), out int year))
-                    throw new ArgumentException("Некоректний рік.");
-
-                string article = textBox1.Text.Trim();
-                string name = textBox2.Text.Trim();
-                string brand = textBox3.Text.Trim();
-
                 switch (comboBoxType.SelectedItem.ToString())
                 {
                     case "Бойлер":
-                        if (!int.TryParse(textBoxVolume.Text.Trim(), out int volume))
-                            throw new ArgumentException("Некоректний об'єм.");
-                        if (!int.TryParse(textBoxPower.Text.Trim(), out int power))
-                            throw new ArgumentException("Некоректна потужність.");
-
-                        newProduct = new Boiler(article, name, brand, price, year, volume, power);
+                        newProduct = new Boiler(textBox1.Text, textBox2.Text, textBox3.Text, price, year, int.Parse(textBoxVolume.Text), int.Parse(textBoxPower.Text));
                         break;
                     case "Сифон":
-                        newProduct = new Siphon(article, name, brand, price, year, textBoxSiphonType.Text.Trim());
+                        newProduct = new Siphon(textBox1.Text, textBox2.Text, textBox3.Text, price, year, textBoxSiphonType.Text);
                         break;
                     case "Мийка":
-                        newProduct = new Sink(article, name, brand, price, year, textBoxMaterial.Text.Trim());
+                        newProduct = new Sink(textBox1.Text, textBox2.Text, textBox3.Text, price, year, textBoxMaterial.Text);
                         break;
                 }
 
                 if (newProduct != null)
                 {
-                    _productService.AddProduct(newProduct);
-                    MessageBox.Show("Товар успішно додано.", "Успіх", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    productList.Add(newProduct);
+                    UpdateDataGridView(productList);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Помилка додавання: " + ex.Message, "Помилка валідації", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Помилка даних: " + ex.Message, "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -148,9 +114,10 @@ namespace lab4C_
                 MessageBox.Show("Введіть артикул для видалення.", "Інформація", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
-
-            if (_productService.DeleteProduct(article))
+            int removedCount = productList.RemoveAll(p => p.Article.Equals(article, StringComparison.OrdinalIgnoreCase));
+            if (removedCount > 0)
             {
+                UpdateDataGridView(productList);
                 MessageBox.Show("Товар(и) успішно видалено.", "Успіх", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             else
@@ -164,7 +131,10 @@ namespace lab4C_
             string article = textBox1.Text.Trim();
             string name = textBox2.Text.Trim();
 
-            var results = _productService.SearchProducts(article, name);
+            var results = productList.Where(p =>
+                (string.IsNullOrWhiteSpace(article) || p.Article.StartsWith(article, StringComparison.OrdinalIgnoreCase)) &&
+                (string.IsNullOrWhiteSpace(name) || p.Name.Contains(name, StringComparison.OrdinalIgnoreCase))
+            ).ToList();
 
             UpdateDataGridView(results, isSearchResult: true);
         }
@@ -177,35 +147,23 @@ namespace lab4C_
                 return;
             }
 
-            try
+            foreach (DataGridViewRow row in dataGridView1.SelectedRows)
             {
-                foreach (DataGridViewRow row in dataGridView1.SelectedRows)
-                {
-                    string article = row.Cells[0].Value.ToString();
+                string article = row.Cells[0].Value.ToString();
+                Product product = productList.FirstOrDefault(p => p.Article == article);
+                if (product == null) continue;
 
-                    Product product = _productService.GetProductByArticle(article);
-                    if (product == null) continue;
+                if (double.TryParse(textBox6.Text.Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out double valPlus)) product += valPlus;
+                if (double.TryParse(textBox7.Text.Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out double valMinus)) product -= valMinus;
+                if (double.TryParse(textBox8.Text.Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out double valMul)) product *= valMul;
+                if (double.TryParse(textBox9.Text.Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out double valDiv)) product /= valDiv;
+            }
 
-                    if (double.TryParse(textBox6.Text.Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out double valPlus)) product += valPlus;
-                    if (double.TryParse(textBox7.Text.Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out double valMinus)) product -= valMinus;
-                    if (double.TryParse(textBox8.Text.Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out double valMul)) product *= valMul;
-                    if (double.TryParse(textBox9.Text.Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out double valDiv)) product /= valDiv;
-                }
-
-                _productService.NotifyUpdate();
-                ClearCalculationFields();
-            }
-            catch (DivideByZeroException)
-            {
-                MessageBox.Show("Помилка! Ділення на нуль.", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Сталася помилка: " + ex.Message, "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
+            UpdateDataGridView(productList);
+            ClearCalculationFields();
         }
 
-        private void UpdateDataGridView(IEnumerable<Product> products, bool isSearchResult = false)
+        private void UpdateDataGridView(List<Product> products, bool isSearchResult = false)
         {
             DataGridView dgv = isSearchResult ? dataGridView2 : dataGridView1;
             dgv.Rows.Clear();
@@ -220,14 +178,17 @@ namespace lab4C_
             SaveFileDialog sfd = new SaveFileDialog { Filter = "CSV Files|*.csv|All Files|*.*" };
             if (sfd.ShowDialog() == DialogResult.OK)
             {
-                try
+                using (StreamWriter sw = new StreamWriter(sfd.FileName))
                 {
-                    _productService.SaveToFile(sfd.FileName);
-                    MessageBox.Show("Дані успішно збережено.", "Успіх", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show("Помилка збереження: " + ex.Message, "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    foreach (Product p in productList)
+                    {
+                        string type = p.GetType().Name;
+                        string line = $"{type};{p.Article};{p.Name};{p.Brand};{p.Price};{p.Year}";
+                        if (p is Boiler b) line += $";{b.VolumeLiters};{b.PowerW}";
+                        if (p is Siphon s) line += $";{s.SiphonType}";
+                        if (p is Sink sk) line += $";{sk.Material}";
+                        sw.WriteLine(line);
+                    }
                 }
             }
         }
@@ -237,15 +198,28 @@ namespace lab4C_
             OpenFileDialog ofd = new OpenFileDialog { Filter = "CSV Files|*.csv|All Files|*.*" };
             if (ofd.ShowDialog() == DialogResult.OK)
             {
-                try
+                productList.Clear();
+                string[] lines = File.ReadAllLines(ofd.FileName);
+                foreach (string line in lines)
                 {
-                    _productService.LoadFromFile(ofd.FileName);
-                    MessageBox.Show("Дані успішно завантажено.", "Успіх", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    string[] parts = line.Split(';');
+                    if (parts.Length < 6) continue;
+
+                    string type = parts[0];
+                    string article = parts[1];
+                    string name = parts[2];
+                    string brand = parts[3];
+                    double price = double.Parse(parts[4]);
+                    int year = int.Parse(parts[5]);
+
+                    Product p = null;
+                    if (type == "Boiler" && parts.Length >= 8) p = new Boiler(article, name, brand, price, year, int.Parse(parts[6]), int.Parse(parts[7]));
+                    else if (type == "Siphon" && parts.Length >= 7) p = new Siphon(article, name, brand, price, year, parts[6]);
+                    else if (type == "Sink" && parts.Length >= 7) p = new Sink(article, name, brand, price, year, parts[6]);
+
+                    if (p != null) productList.Add(p);
                 }
-                catch (Exception ex)
-                {
-                    MessageBox.Show("Помилка завантаження: " + ex.Message, "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
+                UpdateDataGridView(productList);
             }
         }
 
@@ -302,6 +276,7 @@ namespace lab4C_
         private void Price_KeyPress(object sender, KeyPressEventArgs e)
         {
             if (!char.IsControl(e.KeyChar) && !char.IsDigit(e.KeyChar) && e.KeyChar != ',' && e.KeyChar != '.') e.Handled = true;
+            if ((e.KeyChar == ',' || e.KeyChar == '.') && (sender as TextBox).Text.Contains(",")) e.Handled = true;
         }
         private void Year_KeyPress(object sender, KeyPressEventArgs e)
         {
